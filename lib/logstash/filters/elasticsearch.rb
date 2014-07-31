@@ -67,7 +67,9 @@ class LogStash::Filters::Elasticsearch < LogStash::Filters::Base
       results = @client.search q: query_str, sort: @sort, size: 1
 
       @fields.each do |old, new|
-        event[new] = results['hits']['hits'][0]['_source'][old]
+        @results['hits']['hits'].each do |hitNum, hit|
+          event[new][hitNum] = hit['_source'][old]
+        end
       end
       filter_matched(event)
 
@@ -75,9 +77,6 @@ class LogStash::Filters::Elasticsearch < LogStash::Filters::Base
       if fail_on_error == "true"
         @logger.warn("Failed to query elasticsearch for previous event",
                    :query => query_str, :event => event, :error => e)
-      else
-        event["query_failed"] = query_str
-        filter_matched(event)
       end
     end
   end # def filter

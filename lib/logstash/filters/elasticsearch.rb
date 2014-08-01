@@ -72,9 +72,15 @@ class LogStash::Filters::Elasticsearch < LogStash::Filters::Base
           #@logger.warn("in each hit", :index => index, :hit => hit)
           event[new].add hit['_source'][old]
         end
-        event[new] = event[new].to_a
+        if event[new].length > 0
+          event[new] = event[new].to_a
+        else
+          event.delete(new)
+        end
       end
-      filter_matched(event)
+      if event.length > 0
+        filter_matched(event)
+      end
 
     rescue => e
       if fail_on_error == "true"

@@ -65,20 +65,22 @@ class LogStash::Filters::Elasticsearch < LogStash::Filters::Base
       query_str = event.sprintf(@query)
 
       results = @client.search q: query_str, sort: @sort, size: 100
-      @fields.each do |old, new|
-        event[new] = Set.new
-        #@logger.warn("in each field", :results => results)
-        results['hits']['hits'].each_with_index do |hit, index|
-          #@logger.warn("in each hit", :index => index, :hit => hit)
-          event[new].add hit['_source'][old]
-        end
-        if event[new].length > 0
-          event[new] = event[new].to_a
-        else
-          event.delete(new)
+      @fields.each do |old,new|
+        if results['hits']['hits'].length > 0
+          event[new] = Set.new
+          #@logger.warn("in each field", :results => results)
+          results['hits']['hits'].each_with_index do |hit, index|
+            #@logger.warn("in each hit", :index => index, :hit => hit)
+            event[new].add hit['_source'][old]
+          end
+          if event[new].length > 0
+            event[new] = event[new].to_a
+          else
+            event = event.delete(new)
+          end
         end
       end
-      if event.length > 0
+      if results['hits']['hits'].length > 0
         filter_matched(event)
       end
 

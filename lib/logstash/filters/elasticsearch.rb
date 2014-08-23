@@ -49,6 +49,12 @@ class LogStash::Filters::Elasticsearch < LogStash::Filters::Base
   # This can make debugging the query somewhat tricky...
   config :fail_on_error, :validate => :string, :default => "true"
 
+  # Whether results should be sorted or not
+  config :enable_sort, :validate => :string, :default => "true"
+
+  # How many results to return
+  config :result_size, :validate => :integer, :default => 1
+
   public
   def register
     require "elasticsearch"
@@ -63,8 +69,11 @@ class LogStash::Filters::Elasticsearch < LogStash::Filters::Base
 
     begin
       query_str = event.sprintf(@query)
-
-      results = @client.search q: query_str, sort: @sort, size: 100
+      if enable_sort == "true"
+        results = @client.search q: query_str, sort: @sort, size: result_size
+      else
+        results = @client.search q: query_str, size: result_size
+      end
       @fields.each do |old,new|
         if results['hits']['hits'].length > 0
           event[new] = Set.new

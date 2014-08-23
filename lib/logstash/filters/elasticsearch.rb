@@ -53,7 +53,7 @@ class LogStash::Filters::Elasticsearch < LogStash::Filters::Base
   config :enable_sort, :validate => :string, :default => "true"
 
   # How many results to return
-  config :result_size, :validate => :integer, :default => 1
+  config :result_size, :validate => :number, :default => 1
 
   public
   def register
